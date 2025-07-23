@@ -7,7 +7,7 @@ library(digest)   # creates hash values for data, which is essential for caching
 
 
 # Loading & filtering the csv file (for the predicted data):STEP 2
-setwd("C:/Users/OlamideAdenuga/Desktop/COVID-19 Forecasts Internship Project")
+setwd("C:/Users/OlamideAdenuga/Desktop/COVID-19 Forecasts Internship Project/HDR-UK-BIP-Covid19-Project")
 getwd()
 predicted_data = read.csv("predicted_cases.csv")
 predicted_data <- predicted_data %>%
