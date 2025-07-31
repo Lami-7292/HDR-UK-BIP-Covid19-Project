@@ -121,7 +121,7 @@ predicted_data$date <- as.Date(predicted_data$date)    # converts the date (colu
 predicted_data$region <- NULL   # region variable (column) is redundant and so can be removed using NULL
 predicted_data <- predicted_data[, c("date", "confirm")]   # allows me to extract only the 2 variables (columns) that I needed from the data
 
-# Plotting & formatting the line graph for the predicted data [incidence curve]: STEP 3
+# Plotting & formatting the line graph for the predicted data [incidence curve]
 ggplot(predicted_data, aes(x = date, y = confirm)) +
   geom_line(color = "slateblue", linewidth = 0.5) +   #linewidth dictates the size or 'thickness' of the line on the plot
   scale_x_date(date_labels = "%B %Y") +
