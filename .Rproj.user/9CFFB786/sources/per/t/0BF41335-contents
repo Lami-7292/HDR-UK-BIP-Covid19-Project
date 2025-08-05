@@ -128,6 +128,6 @@ metrics <- df %>%
   ) %>%
   summarise(
     MAE = mean(abs_error),
-    MSE = mean(squared_error),
+    MSE = mean(squared_error),   # 4.653315e+14 = 465, 331, 500, 000, 000 = 465.33 trillion
     RMSE = sqrt(MSE)
   )
