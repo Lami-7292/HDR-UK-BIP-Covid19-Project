@@ -9,7 +9,9 @@ During the COVID-19 pandemic, the Epiforecasts Group at the Centre for Mathemati
 This project was built throughout an eight-week summer internship at the LSHTM organised through Health Data Research UK (HDR UK).
 
 ## Project Structure:
-(insert text here)
+1. Directories
+2. How To Run The Analysis
+3. Results & Figures
 
 ## Directories:
 | File / Folder | Description |
@@ -20,7 +22,27 @@ This project was built throughout an eight-week summer internship at the LSHTM o
 | `.gitattributes` | Git configuration for file attributes (e.g., line endings, merge rules). |
 | `README.md` | Main project documentation in Markdown format. |
 | `hdr_uk_bip_covid_19_project.Rproj` | RStudio project file that opens your project with all settings. |
-| `incidence_curve.png` | Image of COVID-19 incidence over time. |
 | `predicted_cases.csv` | Dataset containing predicted COVID-19 case counts. |
 | `predicted_vs_observed_sub_national_covid_19_cases_uk.R` | R script comparing predicted vs. actual COVID-19 case data. |
 
+## How To Run The Analysis:
+1. Clone the repository:
+   git clone https://github.com/YOUR_USERNAME/hdr_uk_bip_covid_19_project.git
+   
+2. Install R dependencies:
+   install.packages(c("dplyr", "scales", "ggplot2", "tidyverse", "digest", "COVID19"))
+  
+3. Set the working directory and run the script:
+   setwd("path/to/hdr_uk_bip_covid_19_project")
+   source("predicted_vs_observed_sub_national_covid_19_cases_uk.R")
+
+4. View the outputs:
+   Plots will be displayed in RStudio
+   Forecast accuracy metrics will be printed in the R console.
+
+## Results & Figures:
+### Forecast Accuracy Metrics:
+
+
+
+### Plots:
