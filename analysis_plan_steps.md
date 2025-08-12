@@ -1,3 +1,17 @@
+This analysis aims to answer:
+
+> **How well does the epiforecasts model perform compared to a simple constant-baseline forecast at different lead times, and where does it add value?**
+
+Specifically, it evaluates:
+
+* **Accuracy across horizons:** Does the model consistently produce smaller forecast errors than the baseline for 1–14 days ahead?
+* **Skill decay:** How does relative performance change as the forecast horizon increases?
+* **When baseline wins:** Are there horizons or situations where the baseline is just as good or better?
+* **Practical reliability:** Over which time ranges can the model’s forecasts be trusted to improve decisions compared to using a naive persistence approach?
+
+The outcome is both **quantitative** (MAE, skill score) and **visual** (error and skill curves) evidence of whether the model outperforms the baseline, where it doesn’t, and how performance shifts from short to longer-term forecasts.
+
+
 * **Setup**
 
   * Load `tidyverse`.
