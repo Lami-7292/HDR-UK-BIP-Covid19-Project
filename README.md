@@ -9,14 +9,3 @@ During the COVID-19 pandemic, the Epiforecasts Group at the Centre for Mathemati
 This project was built throughout an eight-week summer internship at the LSHTM organised through Health Data Research UK (HDR UK).
 
 ## Project Structure:
-1. Directories
-2. How To Run The Analysis
-3. Results & Figures
-
-
-## Results & Figures:
-### Forecast Accuracy Metrics:
-
-
-
-### Plots:
