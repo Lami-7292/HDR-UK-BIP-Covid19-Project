@@ -59,6 +59,21 @@ You now have one row per (date, horizon) with:
 
 2)  Initial exploration: Visualise the forecasts from epiforecasts and the baseline model against the observed data. What do you observe? What is the baseline model doing? 
 
+(A.) Plot of one horizon
+
+```{r eval=TRUE}
+epinow2_forecast_vs_data_one_horizon <- ggplot(paired %>% filter(horizon == 5), aes(date)) +
+  geom_line(aes(y = observed, color = "Observed"), size = 0.4) +
+  geom_line(aes(y = epiforecasts_pred, color = "Epiforecasts"), size = 0.4) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Forecasts vs Observed (1 Horizon)",
+       x = "Date", y = "Incidence",
+       color = "Legend") +
+  theme_minimal()
+epinow2_forecast_vs_data_one_horizon
+```
+
+(B.) Plot of all horizons
 ```{r eval=TRUE}
 forecasts_by_horizon <- ggplot(paired, aes(date)) +
   geom_line(aes(y = observed, color = "Observed"), size = 0.4) +
