@@ -5,16 +5,22 @@ editor:
     wrap: 72
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+```
+
+
 Goal: For each forecast horizon (1–14 days ahead), compare errors from your epiforecasts model against a constant baseline and summarise performance with MAE and a model score (relative skill vs baseline).
 
-0) Initial exploration: Visualise the forecasts from epiforecasts and the baseline model against the observed data. What do you observe? What is the baseline model doing? 
-
-1)  Make the three inputs comparable.
+0)  Get and merge the three datasets.
 
 Why: We need one tidy table with date (the target date), horizon, each model’s prediction, and the observed value.
 
 ```{r eval=FALSE}
-library(tidyverse)
+uk_observed <- readRDS("data/uk_observed.rds")
+uk_prediction_baseline <- readRDS("data/uk_prediction_baseline.rds")
+uk_prediction_epiforecasts <- readRDS("data/uk_prediction_epiforecasts.rds")
 # 1a) Observed data (rename for clarity)
 obs <- uk_observed %>%
   mutate(date = as.Date(date)) %>%
@@ -29,13 +35,14 @@ baseline <- uk_prediction_baseline %>%
 
 # 1c) Epiforecasts predictions
 epiforecasts <- uk_prediction_epiforecasts %>%
+  filter(name == "median") %>%  # keep only median predictions
   mutate(date = as.Date(date)) %>%
   select(date, horizon, epiforecasts_pred = prediction)
 ```
 
 Tip: For a given (date, horizon), there should be one forecast. If you find duplicates, investigate before continuing.
 
-2)  Keep only overlapping targets for a fair comparison
+1)  Keep only overlapping targets for a fair comparison
 
 Why: We compare models on the same (date, horizon) pairs.
 
@@ -49,6 +56,22 @@ paired <- epiforecasts %>%
 You now have one row per (date, horizon) with:
 
 `epiforecasts_pred`, `baseline_pred`, and `observed`
+
+2)  Initial exploration: Visualise the forecasts from epiforecasts and the baseline model against the observed data. What do you observe? What is the baseline model doing? 
+
+```{r eval=TRUE}
+forecasts_by_horizon <- ggplot(paired, aes(date)) +
+  geom_line(aes(y = observed, color = "Observed"), size = 0.4) +
+  geom_line(aes(y = epiforecasts_pred, color = "Epiforecasts"), size = 0.2) +
+  geom_line(aes(y = baseline_pred, color = "Baseline"), size = 0.2) +
+  scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~ horizon, scales = "free_y") +
+  labs(title = "Forecasts vs Observed by Horizon",
+       x = "Date", y = "Incidence",
+       color = "Legend") +
+  theme_minimal()
+forecasts_by_horizon
+```
 
 3)  Compute errors for both models Why: MAE (Mean Absolute Error) is based on absolute errors.
 
