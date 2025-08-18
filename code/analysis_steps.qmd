@@ -1,0 +1,193 @@
+---
+title: "Step-by-step plan (with code) to compare epiforecasts vs baseline against observed"
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+```
+
+Goal: For each forecast horizon (1–14 days ahead), compare errors from your epiforecasts model against a constant baseline and summarise performance with MAE and a model score (relative skill vs baseline).
+
+0)  Get and merge the three datasets.
+
+Why: We need one tidy table with date (the target date), horizon, each model’s prediction, and the observed value.
+
+```{r eval=FALSE}
+uk_observed <- readRDS("data/uk_observed.rds")
+uk_prediction_baseline <- readRDS("data/uk_prediction_baseline.rds")
+uk_prediction_epiforecasts <- readRDS("data/uk_prediction_epiforecasts.rds")
+# 1a) Observed data (rename for clarity)
+obs <- uk_observed %>%
+  mutate(date = as.Date(date)) %>%
+  rename(observed = incidence) %>%
+  select(date, observed)
+
+# 1b) Baseline forecasts (keep only what we need)
+baseline <- uk_prediction_baseline %>%
+  mutate(date = as.Date(date),
+         issue_date = as.Date(issue_date)) %>%
+  select(date, horizon, baseline_pred = prediction)
+
+# 1c) Epiforecasts predictions
+epiforecasts <- uk_prediction_epiforecasts %>%
+  filter(name == "median") %>%  # keep only median predictions
+  mutate(date = as.Date(date)) %>%
+  select(date, horizon, epiforecasts_pred = prediction)
+```
+
+Tip: For a given (date, horizon), there should be one forecast. If you find duplicates, investigate before continuing.
+
+1)  Keep only overlapping targets for a fair comparison
+
+Why: We compare models on the same (date, horizon) pairs.
+
+```{r eval=FALSE}
+paired <- epiforecasts %>%
+  inner_join(baseline, by = c("date","horizon")) %>%  # keep only common targets
+  left_join(obs, by = "date") %>%                     # attach observations
+  filter(!is.na(observed))                             # ensure we can evaluate
+```
+
+You now have one row per (date, horizon) with:
+
+`epiforecasts_pred`, `baseline_pred`, and `observed`
+
+2)  Initial exploration: Visualise the forecasts from epiforecasts and the baseline model against the observed data. What do you observe? What is the baseline model doing? 
+
+(A.) Plot of one horizon
+
+```{r eval=TRUE}
+epinow2_forecast_vs_data_one_horizon <- ggplot(paired %>% filter(horizon == 5), aes(date)) +
+  geom_line(aes(y = observed, color = "Observed"), size = 0.4) +
+  geom_line(aes(y = epiforecasts_pred, color = "Epiforecasts"), size = 0.4) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Forecasts vs Observed (1 Horizon)",
+       x = "Date", y = "Incidence",
+       color = "Legend") +
+  theme_minimal()
+epinow2_forecast_vs_data_one_horizon
+```
+
+(B.) Plot of all horizons
+```{r eval=TRUE}
+forecasts_by_horizon <- ggplot(paired, aes(date)) +
+  geom_line(aes(y = observed, color = "Observed"), size = 0.4) +
+  geom_line(aes(y = epiforecasts_pred, color = "Epiforecasts"), size = 0.2) +
+  geom_line(aes(y = baseline_pred, color = "Baseline"), size = 0.2) +
+  scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~ horizon, scales = "free_y") +
+  labs(title = "Forecasts vs Observed by Horizon",
+       x = "Date", y = "Incidence",
+       color = "Legend") +
+  theme_minimal()
+forecasts_by_horizon
+```
+
+3)  Compute errors for both models Why: MAE (Mean Absolute Error) is based on absolute errors.
+
+```{r eval=FALSE}
+eval_df <- paired %>%
+  mutate(
+    err_epiforecasts  = epiforecasts_pred  - observed,
+    err_base = baseline_pred - observed,
+    ae_epiforecasts   = abs(err_epiforecasts),
+    ae_base  = abs(err_base)
+  )
+```
+
+4)  Summarise by horizon (MAE + model score)
+
+Model score (relative skill) in horizon, $h$ is given by
+
+$$
+\text{score(h)} = 1- \dfrac{\text{MAE}_\text{epiforecasts(h)}}{\text{MAE}_\text{baseline(h)}}
+$$
+
+Interpretation:
+
+- \> 0: epiforecasts beats baseline at horizon h
+
+- < 0: epiforecasts is worse than baseline at horizon h
+
+```{r eval=FALSE}
+metrics <- eval_df %>%
+  group_by(horizon) %>%
+  summarise(
+    n            = n(),
+    mae_epiforecasts      = mean(ae_epiforecasts,  na.rm = TRUE),
+    mae_baseline = mean(ae_base, na.rm = TRUE),
+    score        = 1 - mae_epiforecasts / mae_baseline,
+    .groups = "drop"
+  ) %>%
+  arrange(horizon)
+metrics
+```
+
+(Optional) A quick overall view (short vs long horizons):
+
+```{r eval=FALSE}
+summary_skill <- metrics %>%
+  summarise(
+    score_avg_all  = mean(score, na.rm = TRUE),
+    score_1_7      = mean(score[horizon <= 7], na.rm = TRUE),
+    score_8_14     = mean(score[horizon >= 8], na.rm = TRUE)
+  )
+summary_skill
+```
+
+5)  Visualise 
+
+A. MAE by horizon (lower is better)
+
+```{r eval=FALSE}
+p_mae <- metrics %>%
+    select(horizon, mae_epiforecasts, mae_baseline) %>%
+    pivot_longer(-horizon, names_to = "model", values_to = "mae") %>%
+    ggplot(aes(horizon, mae, color = model)) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = seq(1, 14, 1)) +
+    labs(x = "Horizon (days ahead)", y = "MAE",
+         title = "MAE by horizon: epiforecasts vs baseline") +
+    theme_minimal()
+p_mae
+```
+
+B. Model score (relative skill) by horizon (above zero is good)
+
+```{r eval=FALSE}
+p_score <- ggplot(metrics, aes(horizon, score)) +
+    geom_hline(yintercept = 0, linetype = 2) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = seq(1, 14, 1)) +
+    labs(x = "Horizon (days ahead)",
+         y = "Model score: 1 - MAE_epiforecasts / MAE_base",
+         title = "Relative skill vs baseline by horizon") +
+    theme_minimal()
+p_score
+```
+
+6)  What to report
+
+- A small table with horizon, n, mae_epiforecasts, mae_baseline, score.
+
+- Two plots: MAE curve and Score curve.
+
+- A one-liner summary using summary_skill (e.g., “Average score is 0.12
+for 1–7 days and −0.03 for 8–14 days”).
+
+7)  How to interpret (hints) MAE curves: Lower line wins. If both rise with horizon, that’s normal because longer-range forecasts are harder.
+
+Model score interpretation:
+
+- > 0 at a horizon ⇒ epiforecasts outperforms the baseline there.
+
+- < 0 ⇒ baseline is better (persistence can be strong during stable periods).
+
+Short vs long horizons: It’s common to see positive score for 1–7 days
+and weaker/negative for 8–14.
