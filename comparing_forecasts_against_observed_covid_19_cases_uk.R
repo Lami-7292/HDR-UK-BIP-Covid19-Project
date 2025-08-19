@@ -36,24 +36,27 @@ paired <- epiforecasts_data %>%
 
 
 # Section 2 - DATA VISUALISATION:
-# use this code to create plot that will go in poster (epiforecast vs observed) ONLY
-epinow2_forecast_vs_data_one_horizon <- ggplot(paired %>% filter(horizon == 5), aes(date)) +
+
+epinow2_forecast_vs_data_one_horizon <- ggplot(paired %>% filter(horizon == 10), aes(x = date)) +
   geom_line(aes(y = observed, color = "Observed"), linewidth = 0.4) +
-  geom_line(aes(y = epiforecasts_pred, color = "Epiforecast"), linewidth = 0.4) +
+  geom_line(aes(y = epiforecasts_pred, color = "Epiforecast"), linewidth = 0.6) +
+  geom_line(aes(y = baseline_pred, color = "Baseline"), linewidth = 0.4) +
   scale_y_continuous(labels = scales::comma) +
-  scale_color_manual(values = c("Observed" = "deepskyblue", "Epiforecast" = "grey30")) +
-  labs(title = "Forecast vs Observed",   # this is just for one horizon
-       x = "Date", y = "Number of Cases",
+  scale_color_manual(values = c("Observed" = "red", 
+                                "Epiforecast" = "#4B0082", 
+                                "Baseline" = "#0080FE")) +
+  labs(title = "Forecasts vs Observed",
+       x = "Date", y = "Incidence",
        color = "Legend") +
   theme_minimal()
 epinow2_forecast_vs_data_one_horizon
 
-
 forecasts_by_horizon <- ggplot(paired, aes(date)) +
   geom_line(aes(y = observed, color = "Observed"), linewidth = 0.4) +
-  geom_line(aes(y = epiforecasts_pred, color = "Epiforecast"), linewidth = 0.2) +
-  geom_line(aes(y = baseline_pred, color = "Baseline"), linewidth = 0.2) +
+  geom_line(aes(y = epiforecasts_pred, color = "Epiforecast"), linewidth = 0.4) +
+  geom_line(aes(y = baseline_pred, color = "Baseline"), linewidth = 0.4) +
   scale_y_continuous(labels = scales::comma) +
+  scale_color_manual(values = c("Observed" = "red", "Epiforecast" = "#4B0082", "Baseline" = "#0080FE")) +
   facet_wrap(~ horizon, scales = "free_y") +
   labs(title = "Forecasts vs Observed by Horizon",
        x = "Date", y = "Incidence",
@@ -69,19 +72,20 @@ p_mae <- metrics %>%
   geom_line() +
   geom_point() +
   scale_x_continuous(breaks = seq(1, 14, 1)) +
+  scale_color_manual(values = c("mae_epiforecasts" = "#4B0082", "mae_baseline" = "#0080FE")) +
   labs(x = "Horizon (days ahead)", y = "MAE",
        title = "MAE by horizon: epiforecasts vs baseline") +
   theme_minimal()
 p_mae
 
 p_score <- ggplot(metrics, aes(horizon, score)) +
-  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = 0, linetype = 2, colour = "red") +
   geom_line() +
   geom_point() +
   scale_x_continuous(breaks = seq(1, 14, 1)) +
   labs(x = "Horizon (days ahead)",
-       y = "Model score: 1 - MAE_epiforecasts / MAE_base",
-       title = "Relative skill vs baseline by horizon") +
+       y = "Model score: 1 - (MAE_epiforecasts / MAE_base)",
+       title = "Relative skill of epiforecast vs baseline by horizon") +
   theme_minimal()
 p_score
 
