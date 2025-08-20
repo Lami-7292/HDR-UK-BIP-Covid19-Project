@@ -56,6 +56,11 @@ forecasts_by_horizon <- ggplot(paired, aes(date)) +
   geom_line(aes(y = epiforecasts_pred, color = "Epiforecast"), linewidth = 0.4) +
   geom_line(aes(y = baseline_pred, color = "Baseline"), linewidth = 0.4) +
   scale_y_continuous(labels = scales::comma) +
+  scale_x_date(
+    date_breaks = "1 year",   # show one tick per year
+    date_labels = "%Y",       # label format = just year
+    expand = c(0,0)           # remove extra padding
+  ) +
   scale_color_manual(values = c("Observed" = "red", "Epiforecast" = "#4B0082", "Baseline" = "#0080FE")) +
   facet_wrap(~ horizon, scales = "free_y") +
   labs(title = "Forecasts vs Observed by Horizon",
@@ -63,7 +68,6 @@ forecasts_by_horizon <- ggplot(paired, aes(date)) +
        color = "Legend") +
   theme_minimal()
 forecasts_by_horizon
-
 
 p_mae <- metrics %>%
   select(horizon, mae_epiforecasts, mae_baseline) %>%
@@ -111,3 +115,4 @@ metrics <- eval_df %>%
   ) %>%
   arrange(horizon)
 metrics
+write.csv(metrics, "metrics_by_horizon.csv", row.names = FALSE)
