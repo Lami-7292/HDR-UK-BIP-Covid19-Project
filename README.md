@@ -55,5 +55,5 @@ For more details, see: [analysis_plan_steps.md](analysis_plan_steps.md).
 2. Open the R project (HDR-UK-BIP-Covid19-Project.Rproj) in RStudio.
 3. Run scripts inside the code/ folder in sequence to reproduce results.
 
-### Acknowledgements:
+## Acknowledgements:
 The Epiforecasts Group at the CMMID, The London School of Hygiene and Tropical Medicine & HDR UK
